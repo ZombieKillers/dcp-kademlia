@@ -1,6 +1,15 @@
 package main
-import "fmt"
+
+import (
+	"./hash"
+	"./nodes"
+)
 
 func main() {
-	fmt.Printf("hello, world\n")
+	n1 := nodes.Node{3}
+	n2 := nodes.Node{1023}
+
+	dist := nodes.XORDistance(n1, n2)
+	hash.SayHello(dist)
+
 }

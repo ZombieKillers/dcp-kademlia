@@ -4,24 +4,23 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/rand"
-	"os"
 )
 
 const IdLength = 20
 
 type NodeID [IdLength]byte
 
-func NewNodeId(data string) (ret NodeID) {
+func NewNodeId(data string) (ret NodeID, err error) {
 	decoded, err := hex.DecodeString(data)
 	if err != nil {
 		fmt.Printf("%e\n", err)
-		os.Exit(-1)
+		return;
 	}
 
 	for i := 0; i < IdLength; i++ {
 		ret[i] = decoded[i]
 	}
-	return ret
+	return;
 }
 
 func NewRandomNodeId() (ret NodeID) {

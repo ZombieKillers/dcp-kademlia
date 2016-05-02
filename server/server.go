@@ -3,24 +3,56 @@ package server
 import (
 	"net"
 	"fmt"
-	"reflect"
 	"strings"
 	"errors"
+	"../nodes"
 )
 func GetStates() []string{
 	states := []string {"PING", "STORE", "FIND_NODE", "FIND_VALUE"}
 	return states
 }
 
+func getLocalAddress() (*net.UDPAddr, error) {
+	return net.ResolveUDPAddr("udp", "127.0.0.1:0")
+
+}
+
+func handlePing(message []string, address *net.UDPAddr) error {
+	messageId, err := nodes.NewNodeId(message[0])
+	if err != nil {
+		return err
+	}
+
+	LocalAddr, err := getLocalAddress()
+	if err != nil {
+		return err
+	}
+
+	Conn, err := net.DialUDP("udp", LocalAddr, address)
+	if err != nil {
+		return err
+	}
+
+	reply := "PONG " + messageId.String()
+	_, err = Conn.Write([]byte(reply))
+	if err != nil {
+		return  err
+	}
+	Conn.Close()
+	return nil
+}
+
+
 func HandleMessage(splitMessage []string, address *net.UDPAddr) error {
 	states := GetStates()
-	if len(splitMessage) < 1 {
+	if len(splitMessage) < 2 {
 		return errors.New("Empty message or unrecognized RPC");
 	}
+	err := error(nil)
 	procedure := splitMessage[0]
 	switch procedure {
 	case states[0]:
-		fmt.Println("I got a ping message!")
+		err = handlePing(splitMessage[1:], address)
 		break
 	case states[1]:
 		fmt.Println("I got a store message!")
@@ -32,7 +64,11 @@ func HandleMessage(splitMessage []string, address *net.UDPAddr) error {
 		fmt.Println("I got a find value message!")
 		break
 	default:
-		return errors.New("RPC not found!")
+		err = errors.New("RPC not found!")
+	}
+
+	if err != nil {
+		fmt.Println("Error: ", err)
 	}
 	return nil
 }
@@ -51,7 +87,7 @@ func ListenForMessages(server *net.UDPConn) error {
 			return err
 		}
 
-		go HandleMessage(strings.Split(msg, " "), addr)
+		HandleMessage(strings.Split(msg, " "), addr)
 	}
 	return nil
 }
@@ -63,7 +99,6 @@ func StartServer() error {
 		return e
 	}
 	l, e := net.ListenUDP("udp", ServerAddr)
-	fmt.Println(reflect.TypeOf(l))
 	if e != nil {
 		return e
 	}

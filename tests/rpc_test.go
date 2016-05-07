@@ -15,7 +15,7 @@ func TestPingServer(t *testing.T){
 
 	// Init
 	rand.Seed(time.Now().UTC().UnixNano())
-	ServerAddr, err := net.ResolveUDPAddr("udp", ":12345")
+	ServerAddr, err := net.ResolveUDPAddr("udp", "localhost:12345")
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -30,14 +30,45 @@ func NewRandomNodeId() (ret NodeID) {
 	return ret
 }
 
+func (node NodeID) Less(other interface{}) bool {
+	for i := range node {
+		if node[i] != other.(NodeID)[i] {
+			return node[i] < other.(NodeID)[i]
+		}
+	}
+	return false
+}
+
+func (node NodeID) Equals(other NodeID) bool {
+	for i := 0; i < IdLength; i++ {
+		if node[i] != other[i] {
+			return false;
+		}
+	}
+	return true;
+}
+
+
 func (node NodeID) String() string {
 	return hex.EncodeToString(node[0:IdLength])
 }
 
-type Node struct {
-	Id int
+
+func (node NodeID) Distance(other NodeID) (ret NodeID) {
+	for i := 0; i < IdLength; i++ {
+		ret[i] = node[i] ^ other[i]
+	}
+	return;
 }
 
-func XORDistance(node1 Node, node2 Node) int {
-	return node1.Id ^ node2.Id
+func (node NodeID) PrefixLen() (ret int) {
+	for i := 0; i < IdLength; i++ {
+		for j := 0; j < 8; j++ {
+			if (node[i] >> uint8(7 - j)) & 0x1 != 0 {
+				return i * 8 + j;
+			}
+		}
+	}
+	return IdLength * 8 - 1;
 }
+

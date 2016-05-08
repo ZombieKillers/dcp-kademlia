@@ -14,33 +14,37 @@ const BucketSize = 20;
 
 type Contact struct {
 	Id nodes.NodeID
-	ip string
-	port int
+	Ip string
+	Port int
 }
 
-func NewContact(id nodes.NodeID, ip string, port int) (ret *Contact) {
-	return &Contact{id, ip, port}
+func NewContact(id nodes.NodeID, ip string, port int) (Contact) {
+	return Contact{id, ip, port}
 }
 
 
 type RoutingTable struct {
 	node nodes.NodeID;
+	ipAddress string
+	port int
 	buckets [nodes.IdLength*8]*list.List;
 }
 
-func NewRoutingTable(node nodes.NodeID) (ret RoutingTable) {
+func NewRoutingTable(contact Contact) (ret RoutingTable) {
+	ret.node = contact.Id
+	ret.ipAddress = contact.Ip
+	ret.port = contact.Port
 	for i := 0; i < nodes.IdLength * 8; i++ {
 		ret.buckets[i] = list.New();
 	}
-	ret.node = node;
 	return;
 }
 
 func findElementInBucket(bucket *list.List, id nodes.NodeID) (ret *nodes.NodeID){
 
 	for e := bucket.Front(); e != nil; e = e.Next() {
-		if id.Equals(e.Value.(nodes.NodeID)) {
-			ret = e.Value.(*nodes.NodeID)
+		if id.Equals(e.Value.(*Contact).Id) {
+			ret = &e.Value.(*Contact).Id
 			return
 		}
 	}
@@ -67,8 +71,8 @@ func (table *RoutingTable) Update(contact *Contact) {
 func (contact *Contact) String() (s string){
 	s = "( "
 	s += "Node: " + contact.Id.String() + ", "
-	s += "Ip: " + contact.ip + ", "
-	s += "Port: " + strconv.Itoa(contact.port) + " ) "
+	s += "Ip: " + contact.Ip + ", "
+	s += "Port: " + strconv.Itoa(contact.Port) + " ) "
 	return
 }
 

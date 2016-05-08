@@ -12,22 +12,23 @@ import (
 
 
 func TestPingServer(t *testing.T){
-
+	ownId := nodes.NewRandomNodeId()
 	// Init
 	rand.Seed(time.Now().UTC().UnixNano())
+	LocalAddr, err := net.ResolveUDPAddr("udp", "localhost:33455")
 	ServerAddr, err := net.ResolveUDPAddr("udp", "localhost:12345")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	Conn, err := net.DialUDP("udp", nil, ServerAddr)
+	Conn, err := net.DialUDP("udp", LocalAddr, ServerAddr)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 
 	// Writing
-	msg := "PING " + nodes.NewRandomNodeId().String()
+	msg := "PING " + ownId.String() + " " + nodes.NewRandomNodeId().String()
 	buf := []byte(msg)
 
 	_, err = Conn.Write(buf)
@@ -36,7 +37,7 @@ func TestPingServer(t *testing.T){
 	}
 	Conn.Close()
 
-	LocalAddr, err := net.ResolveUDPAddr("udp", Conn.LocalAddr().String())
+	//LocalAddr, err = net.ResolveUDPAddr("udp", Conn.LocalAddr().String())
 	Listener, e := net.ListenUDP("udp", LocalAddr)
 	if e != nil {
 		t.Fatal(e)

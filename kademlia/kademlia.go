@@ -2,16 +2,16 @@ package kademlia
 
 import (
 	"../table"
-	"../nodes"
 )
 
 type Kademlia struct {
-	RoutingTable *table.RoutingTable
+	routes *table.RoutingTable
+	NetworkId string
 }
 
-func NewKademlia(myNode nodes.NodeID) Kademlia{
-	ret := Kademlia{
-		RoutingTable: table.NewRoutingTable(myNode),
-	}
-	return ret
+func NewKademlia(self table.Contact, networkId string) (ret Kademlia) {
+	ret = Kademlia{table.NewRoutingTable(self), networkId }
+	return
 }
+
+

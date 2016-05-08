@@ -12,9 +12,10 @@ import (
 
 
 func TestPingServer(t *testing.T){
-	ownId := kademlia.NewRandomNodeId()
 	// Init
-	rand.Seed(time.Now().UTC().UnixNano())
+	rand.Seed(time.Now().UnixNano())
+	ownId := kademlia.NewRandomNodeId()
+
 	LocalAddr, err := net.ResolveUDPAddr("udp", "localhost:33455")
 	ServerAddr, err := net.ResolveUDPAddr("udp", "localhost:12345")
 	if err != nil {

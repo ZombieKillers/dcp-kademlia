@@ -58,6 +58,7 @@ func (table *RoutingTable) Update(contact *Contact) {
 	if element == nil {
 		if bucket.Len() <= BucketSize {
 			bucket.PushFront(contact)
+			fmt.Println("New len is:", bucket.Len())
 		} else {
 			// Send ping to oldest contact
 			oldestContact := bucket.Back().Value.(NodeID)
@@ -84,18 +85,22 @@ func (table *RoutingTable) String() string {
 
 	for bucketNumber, b := range table.buckets {
 		if b.Len() > 0 {
-			s += b.Front().Value.(*Contact).String() + "\n"
+			s+= "[BUCKET " + strconv.Itoa(bucketNumber) + " ]\n"
+			for el := b.Front(); el != nil; el = el.Next() {
+				s += el.Value.(*Contact).String() + "\n"
+			}
 			bucketNumbers = append(bucketNumbers, bucketNumber)
 		}
 	}
 	s+=  "Occupied buckets: "
 	s+= "[ "
 	for _, bucket := range bucketNumbers {
-		s += strconv.Itoa(bucket)
+		s += " " + strconv.Itoa(bucket)
 	}
 	s += " ]"
 	return s
 }
+
 
 type ContactRecordList []*ContactRecord
 

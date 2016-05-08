@@ -65,6 +65,9 @@ func (table *RoutingTable) Update(contact *Contact) {
 			//TODO Replace print above with actual call to ping
 		}
 	}
+
+	fmt.Println("Updated routing table")
+	fmt.Println(table)
 }
 
 func (contact *Contact) String() (s string){

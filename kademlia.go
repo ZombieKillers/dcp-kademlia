@@ -41,6 +41,9 @@ func (k *Kademlia) HandleRemoteResponses() {
 				fmt.Println("Exiting...")
 				return
 			}
+			break
+		case err := <-k.server.Errors:
+			fmt.Println("[SERVER_ERROR]", err)
 		default:
 			time.Sleep(time.Millisecond * 10)
 		}

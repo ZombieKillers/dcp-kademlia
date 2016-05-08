@@ -15,6 +15,7 @@ type KademliaServer struct {
 	contact *Contact
 	PingContacts chan Contact
 	Done chan bool
+	Errors chan error
 }
 
 func (ks *KademliaServer) GetStates() []string{
@@ -58,7 +59,7 @@ func (ks *KademliaServer) HandleMessage(splitMessage []string, address *net.UDPA
 	return nil
 }
 
-func (ks *KademliaServer) ListenForMessages(server *net.UDPConn) error {
+func (ks *KademliaServer) ListenForMessages(server *net.UDPConn) {
 	defer server.Close()
 
 	fmt.Println("Listening for contacts here")
@@ -68,16 +69,12 @@ func (ks *KademliaServer) ListenForMessages(server *net.UDPConn) error {
 		msg := string(buf[0:n])
 		fmt.Println("Received ", msg, " from ",addr)
 		if err != nil {
-			fmt.Println("Error: ",err)
-			return err
+			ks.Errors <- err
 		}
-
 		if err = ks.HandleMessage(strings.Split(msg, " "), addr); err != nil{
-			fmt.Println("[ERROR]", err)
-			ks.Done <- true
+			ks.Errors <- err
 		}
 	}
-	return nil
 }
 
 
@@ -85,6 +82,8 @@ func (ks *KademliaServer) StartServer(self *Contact) error {
 	ks.contact = self
 	ks.Done = make(chan bool, 1)
 	ks.PingContacts = make(chan Contact, 5)
+	ks.Errors = make(chan error, 1)
+
 	fmt.Println("Port:", self.Port)
 	ServerAddr, e := net.ResolveUDPAddr("udp",  ":" + strconv.Itoa(self.Port))
 	if e != nil {

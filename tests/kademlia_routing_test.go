@@ -1,9 +1,11 @@
 package rpc_test
 
-import ("testing"
+import (
 	"../../dcp-kademlia"
 	"fmt"
+	"testing"
 )
+
 func TestRoutingTableUpdate(t *testing.T) {
 
 	contact1 := kademlia.NewContact(kademlia.NewRandomNodeId(), "192.168.0.1", 12345)
@@ -17,7 +19,6 @@ func TestRoutingTableUpdate(t *testing.T) {
 	routingTable.Update(contact2)
 	fmt.Println(&routingTable)
 }
-
 
 func TestRoutingTableFind(t *testing.T) {
 	contact1 := kademlia.NewContact(kademlia.NewRandomNodeId(), "192.168.0.1", 12345)

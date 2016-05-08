@@ -6,9 +6,8 @@ import (
 	"time"
 )
 
-
 func main() {
-	states := map[int]string {0 : "PING", 1: "STORE", 2: "FIND_NODE", 3: "FIND_VALUE"}
+	states := map[int]string{0: "PING", 1: "STORE", 2: "FIND_NODE", 3: "FIND_VALUE"}
 
 	ServerAddr, err := net.ResolveUDPAddr("udp", "127.0.0.1:12345")
 	if err != nil {

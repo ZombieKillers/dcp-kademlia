@@ -4,17 +4,18 @@ import (
 	"fmt"
 	"net"
 	"strconv"
-	"time"
 	"strings"
+	"time"
+	"errors"
 )
 
-func (k *Kademlia) Ping(contact *Contact) (ret *Contact){
+func (k *Kademlia) Ping(contact *Contact) (ret *Contact) {
 	k.server.SendPing(contact)
 	select {
-	case replyContact := <- k.server.PingContacts:
+	case replyContact := <-k.server.PingReplies:
 		ret = &replyContact
 	case <-time.After(time.Second * 1):
-		fmt.Println("[ERROR] Request for ping timed out...")
+		k.server.Errors <- errors.New("Request for ping timed out...")
 		ret = nil
 	}
 	if ret != nil {
@@ -26,23 +27,17 @@ func (k *Kademlia) Ping(contact *Contact) (ret *Contact){
 	return
 }
 
-
-
-
-
-
 /// Server stuff
 
+func (ks *KademliaServer) SendPing(contact *Contact) {
+	go func() {
 
-func (ks *KademliaServer) SendPing(contact *Contact){
-	go func(){
-
-		LocalAddr,err := ks.getLocalAddress()
+		LocalAddr, err := ks.getLocalAddress()
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
-		ServerAddr, err := net.ResolveUDPAddr("udp", contact.Ip + ":" + strconv.Itoa(12345))
+		ServerAddr, err := net.ResolveUDPAddr("udp", contact.Ip+":"+strconv.Itoa(contact.Port))
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -62,7 +57,6 @@ func (ks *KademliaServer) SendPing(contact *Contact){
 			fmt.Println(err)
 		}
 		Conn.Close()
-
 
 		//LocalAddr, err = net.ResolveUDPAddr("udp", Conn.LocalAddr().String())
 		Listener, e := net.ListenUDP("udp", LocalAddr)
@@ -89,22 +83,12 @@ func (ks *KademliaServer) SendPing(contact *Contact){
 			fmt.Println(err)
 			return
 		}
-		ks.PingContacts <- NewContact(otherNodeId, addr.IP.String(), addr.Port)
+		ks.PingReplies <- NewContact(otherNodeId, addr.IP.String(), addr.Port)
 	}()
 }
 
-
-
 func (ks *KademliaServer) handlePing(message []string, address *net.UDPAddr) error {
-	messageId, err := NewNodeId(message[1])
-	if err != nil {
-		return err
-	}
-
-	otherNodeId, err := NewNodeId(message[0])
-	if err != nil {
-		return err
-	}
+	messageId, otherNodeId, err := ks.extractMessageAndOtherNodeId(message[0:2])
 
 	LocalAddr, err := ks.getLocalAddress()
 	if err != nil {
@@ -119,9 +103,9 @@ func (ks *KademliaServer) handlePing(message []string, address *net.UDPAddr) err
 	reply := "PONG " + ks.contact.Id.String() + " " + messageId.String()
 	_, err = Conn.Write([]byte(reply))
 	if err != nil {
-		return  err
+		return err
 	}
 	Conn.Close()
-	ks.PingContacts <- NewContact(otherNodeId, address.IP.String(), address.Port)
+	ks.PingContacts <- NewContact(*otherNodeId, address.IP.String(), address.Port)
 	return nil
 }

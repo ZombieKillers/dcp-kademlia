@@ -6,20 +6,19 @@ type Contact struct {
 	id int
 }
 
-type ContactStruct struct{
-	node *Contact
+type ContactStruct struct {
+	node  *Contact
 	value int
 }
 
-func NewContact(id int) (*Contact){
+func NewContact(id int) *Contact {
 	return &Contact{id: id}
 }
 
-
-func createContactStructs(l *[]*ContactStruct,  contacts []*Contact){
+func createContactStructs(l *[]*ContactStruct, contacts []*Contact) {
 
 	for i, v := range contacts {
-		*l = append(*l ,&ContactStruct{v, i})
+		*l = append(*l, &ContactStruct{v, i})
 	}
 
 }
@@ -33,7 +32,7 @@ func main() {
 	contacts[1] = contact2
 	contactStructs := make([]*ContactStruct, 0)
 	createContactStructs(&contactStructs, contacts)
-	for _,v := range contactStructs {
+	for _, v := range contactStructs {
 		fmt.Println("Node:", v.node.id)
 		fmt.Println("Value:", v.value)
 	}

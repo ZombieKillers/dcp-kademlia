@@ -1,23 +1,20 @@
 package main
 
 import (
-	"fmt"
+	"../../dcp-kademlia"
 	"math/rand"
 	"time"
-	"../../dcp-kademlia"
 )
 
 func init() {
-	rand.Seed(time.Now().UTC().UnixNano())
+	rand.Seed(time.Unix(1,2).UnixNano())
 }
 
 func main() {
-	contact := kademlia.NewContact(kademlia.NewRandomNodeId(), "127.0.0.1", 12345)
-	fmt.Println(contact.Port)
+	nodeId, _ := kademlia.NewNodeId("8ae869162642ab0a723f0bb6bf3e8c53398b90d2")
+	contact := kademlia.NewContact(nodeId, "127.0.0.1", 12345)
 	k := kademlia.NewKademlia(contact, "1")
 
-
-	fmt.Println("Trying some RPC stuff")
-
 	k.StartServer()
+	<- k.ServerDone
 }

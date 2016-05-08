@@ -1,8 +1,6 @@
 package kademlia
 
 import (
-	"../table"
-	"../nodes"
 	"net"
 	"strings"
 	"fmt"
@@ -11,13 +9,13 @@ import (
 )
 
 type Kademlia struct {
-	self table.Contact
+	self Contact
 	ownServer *KademliaServer
-	routes *table.RoutingTable
+	routes *RoutingTable
 	NetworkId string
 }
 
-func (k *Kademlia) GetRoutes() (routes *table.RoutingTable){
+func (k *Kademlia) GetRoutes() (routes *RoutingTable){
 	routes = k.routes
 	return
 }
@@ -27,8 +25,8 @@ func (k *Kademlia) StartServer() {
 	k.ownServer.StartServer(k.self)
 }
 
-func NewKademlia(self table.Contact, networkId string) (ret Kademlia) {
-	routingTable := table.NewRoutingTable(self)
+func NewKademlia(self Contact, networkId string) (ret Kademlia) {
+	routingTable := NewRoutingTable(self)
 	ret = Kademlia{self: self, routes: &routingTable, NetworkId: networkId }
 	return
 }
@@ -52,12 +50,12 @@ func (ks *KademliaServer) getLocalAddress() (*net.UDPAddr, error) {
 }
 
 func (ks *KademliaServer) handlePing(message []string, address *net.UDPAddr) error {
-	messageId, err := nodes.NewNodeId(message[1])
+	messageId, err := NewNodeId(message[1])
 	if err != nil {
 		return err
 	}
 
-	otherNodeId, err := nodes.NewNodeId(message[0])
+	otherNodeId, err := NewNodeId(message[0])
 	if err != nil {
 		return err
 	}
@@ -79,7 +77,7 @@ func (ks *KademliaServer) handlePing(message []string, address *net.UDPAddr) err
 	}
 	Conn.Close()
 
-	newContact := table.NewContact(otherNodeId, address.IP.String(),address.Port)
+	newContact := NewContact(otherNodeId, address.IP.String(),address.Port)
 	ks.k.routes.Update(&newContact)
 	fmt.Println("Updated kademlia routing table")
 
@@ -87,6 +85,10 @@ func (ks *KademliaServer) handlePing(message []string, address *net.UDPAddr) err
 	return nil
 }
 
+
+func (ks *KademliaServer) SendPing(contact *Contact){
+
+}
 
 func (ks *KademliaServer) HandleMessage(splitMessage []string, address *net.UDPAddr) error {
 	states := ks.GetStates()
@@ -138,7 +140,7 @@ func (ks *KademliaServer) ListenForMessages(server *net.UDPConn) error {
 }
 
 
-func (ks *KademliaServer) StartServer(self table.Contact) error {
+func (ks *KademliaServer) StartServer(self Contact) error {
 	fmt.Println("Port:", self.Port)
 	ServerAddr, e := net.ResolveUDPAddr("udp",  ":" + strconv.Itoa(self.Port))
 	if e != nil {

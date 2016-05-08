@@ -1,12 +1,10 @@
 package main
 
 import (
-	"./nodes"
 	"fmt"
 	"math/rand"
 	"time"
-	"./kademlia"
-	"./table"
+	"../../dcp-kademlia"
 )
 
 func init() {
@@ -14,7 +12,7 @@ func init() {
 }
 
 func main() {
-	contact := table.NewContact(nodes.NewRandomNodeId(), "127.0.0.1", 12345)
+	contact := kademlia.NewContact(kademlia.NewRandomNodeId(), "127.0.0.1", 12345)
 	fmt.Println(contact.Port)
 	k := kademlia.NewKademlia(contact, "1")
 

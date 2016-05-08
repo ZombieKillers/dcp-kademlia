@@ -3,7 +3,7 @@ package rpc_test
 import (
 	"testing"
 	"net"
-	"../nodes"
+	"../../dcp-kademlia"
 	"fmt"
 	"math/rand"
 	"time"
@@ -12,7 +12,7 @@ import (
 
 
 func TestPingServer(t *testing.T){
-	ownId := nodes.NewRandomNodeId()
+	ownId := kademlia.NewRandomNodeId()
 	// Init
 	rand.Seed(time.Now().UTC().UnixNano())
 	LocalAddr, err := net.ResolveUDPAddr("udp", "localhost:33455")
@@ -28,7 +28,7 @@ func TestPingServer(t *testing.T){
 
 
 	// Writing
-	msg := "PING " + ownId.String() + " " + nodes.NewRandomNodeId().String()
+	msg := "PING " + ownId.String() + " " + kademlia.NewRandomNodeId().String()
 	buf := []byte(msg)
 
 	_, err = Conn.Write(buf)

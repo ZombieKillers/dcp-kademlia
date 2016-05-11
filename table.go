@@ -37,24 +37,25 @@ func findElementInBucket(bucket *list.List, id NodeID) (ret *NodeID) {
 	return
 }
 
-func (table *RoutingTable) Update(contact *Contact) {
+func (table *RoutingTable) Update(contact *Contact) (oldestContact *Contact, bucketNr int){
 	prefixLen := table.node.Distance(contact.Id).PrefixLen()
 	bucket := table.buckets[prefixLen]
 	element := findElementInBucket(bucket, contact.Id)
+	oldestContact = nil
 
 	if element == nil {
 		if bucket.Len() <= BucketSize {
 			bucket.PushFront(contact)
 		} else {
 			// Send ping to oldest contact
-			oldestContact := bucket.Back().Value.(NodeID)
-			fmt.Println(oldestContact)
-			//TODO Replace print above with actual call to ping
+			oldestContact = bucket.Back().Value.(*Contact)
+			bucketNr = prefixLen
 		}
 	}
 
 	fmt.Println("Updated routing table")
 	fmt.Println(table)
+	return
 }
 
 func (contact *Contact) String() (s string) {

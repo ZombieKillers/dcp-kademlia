@@ -18,6 +18,7 @@ type KademliaServer struct {
 	FindNodeReplies  chan []*ContactRecord
 	PingReplies 	 chan Contact
 	Done             chan bool
+	KeyValuePairs    chan *KeyValuePair
 	Errors           chan error
 	ServerHandle	 *net.UDPConn
 }
@@ -59,7 +60,7 @@ func (ks *KademliaServer) HandleMessage(splitMessage []string, address *net.UDPA
 		err = ks.handlePing(splitMessage[1:], address)
 		break
 	case states[1]:
-		err = ks.handleFindNode(splitMessage[1:], address)
+		err = ks.handleStore(splitMessage[1:], address)
 		break
 	case states[2]:
 		if len(splitMessage) < 4 {
@@ -104,6 +105,7 @@ func (ks *KademliaServer) StartServer(self *Contact) error {
 	ks.FindNodeRequests = make(chan FindNodeRequest, 1)
 	ks.FindNodeReplies = make(chan []*ContactRecord, 3)
 	ks.PingReplies = make(chan Contact, 1)
+	ks.KeyValuePairs = make(chan *KeyValuePair, 1)
 
 	ServerAddr, e := net.ResolveUDPAddr("udp", ":"+strconv.Itoa(self.Port))
 	if e != nil {
@@ -123,4 +125,34 @@ func (ks *KademliaServer) setReuseAddress(conn net.PacketConn) {
 	file, _ := conn.(*net.UDPConn).File()
 	fd := file.Fd()
 	syscall.SetsockoptInt(syscall.Handle(fd), syscall.SOL_SOCKET, syscall.SO_REUSEADDR, 1)
+}
+
+
+func (ks *KademliaServer) sendMessage(contact *Contact, msg string, done chan bool) {
+	LocalAddr, err := ks.getLocalAddress()
+	if err != nil {
+		ks.Errors <- err
+		return
+	}
+	fmt.Println("Sending message to contact:", contact)
+	ServerAddr, err := net.ResolveUDPAddr("udp", contact.Ip+":"+strconv.Itoa(contact.Port))
+
+	if err != nil {
+		ks.Errors <- err
+	}
+
+	Conn, err := net.DialUDP("udp", LocalAddr, ServerAddr)
+	ks.setReuseAddress(Conn)
+	if err != nil {
+		ks.Errors <- err
+	}
+
+	// Writing
+	buf := []byte(msg)
+	_, err = Conn.Write(buf)
+	if err != nil {
+		ks.Errors <- err
+	}
+	Conn.Close()
+	done <- true
 }

@@ -18,11 +18,6 @@ func (k *Kademlia) Ping(contact *Contact) (ret *Contact) {
 		k.server.Errors <- errors.New("Request for ping timed out...")
 		ret = nil
 	}
-	if ret != nil {
-		k.routes.Update(ret)
-		fmt.Println("Updated kademlia routing table")
-		fmt.Println(k.routes)
-	}
 
 	return
 }

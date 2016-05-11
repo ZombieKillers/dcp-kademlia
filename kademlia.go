@@ -43,6 +43,7 @@ func (k *Kademlia) handleRemoteResponses() {
 			k.server.FindNodeReplies <- k.routes.FindClosest(request.target, BucketSize)
 		case done := <-k.server.Done:
 			if done == true {
+				k.server.ServerHandle.Close()
 				k.ServerDone <- done
 			}
 		case err := <-k.server.Errors:
@@ -51,4 +52,8 @@ func (k *Kademlia) handleRemoteResponses() {
 			time.Sleep(time.Millisecond * 5)
 		}
 	}
+}
+
+func (k *Kademlia) StopServer(){
+	k.server.ServerHandle.Close()
 }

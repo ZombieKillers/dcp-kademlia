@@ -31,19 +31,20 @@ func (k *Kademlia) Ping(contact *Contact) (ret *Contact) {
 
 func (ks *KademliaServer) SendPing(contact *Contact) {
 	go func() {
-
 		LocalAddr, err := ks.getLocalAddress()
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
 		ServerAddr, err := net.ResolveUDPAddr("udp", contact.Ip+":"+strconv.Itoa(contact.Port))
+
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
 
 		Conn, err := net.DialUDP("udp", LocalAddr, ServerAddr)
+		ks.setReuseAddress(Conn)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -57,9 +58,8 @@ func (ks *KademliaServer) SendPing(contact *Contact) {
 			fmt.Println(err)
 		}
 		Conn.Close()
-
-		//LocalAddr, err = net.ResolveUDPAddr("udp", Conn.LocalAddr().String())
 		Listener, e := net.ListenUDP("udp", LocalAddr)
+		ks.setReuseAddress(Listener)
 		if e != nil {
 			fmt.Println(e)
 		}
@@ -84,6 +84,7 @@ func (ks *KademliaServer) SendPing(contact *Contact) {
 			return
 		}
 		ks.PingReplies <- NewContact(otherNodeId, addr.IP.String(), addr.Port)
+		Listener.Close()
 	}()
 }
 

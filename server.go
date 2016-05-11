@@ -6,6 +6,7 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"syscall"
 )
 
 // Server implementation
@@ -18,6 +19,7 @@ type KademliaServer struct {
 	PingReplies 	 chan Contact
 	Done             chan bool
 	Errors           chan error
+	ServerHandle	 *net.UDPConn
 }
 
 
@@ -100,7 +102,7 @@ func (ks *KademliaServer) StartServer(self *Contact) error {
 	ks.PingContacts = make(chan Contact, 5)
 	ks.Errors = make(chan error, 1)
 	ks.FindNodeRequests = make(chan FindNodeRequest, 1)
-	ks.FindNodeReplies = make(chan []*ContactRecord, 1)
+	ks.FindNodeReplies = make(chan []*ContactRecord, 3)
 	ks.PingReplies = make(chan Contact, 1)
 
 	ServerAddr, e := net.ResolveUDPAddr("udp", ":"+strconv.Itoa(self.Port))
@@ -112,6 +114,13 @@ func (ks *KademliaServer) StartServer(self *Contact) error {
 		return e
 	}
 
+	ks.ServerHandle = l
 	go ks.ListenForMessages(l)
 	return nil
+}
+
+func (ks *KademliaServer) setReuseAddress(conn net.PacketConn) {
+	file, _ := conn.(*net.UDPConn).File()
+	fd := file.Fd()
+	syscall.SetsockoptInt(syscall.Handle(fd), syscall.SOL_SOCKET, syscall.SO_REUSEADDR, 1)
 }

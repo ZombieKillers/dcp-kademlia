@@ -5,6 +5,7 @@ import (
 	"time"
 	"math/rand"
 	"../../dcp-kademlia"
+	"fmt"
 )
 
 func TestStore(t *testing.T) {
@@ -23,5 +24,9 @@ func TestStore(t *testing.T) {
 	<- done
 	k.Store(&otherContact, &request2, done)
 	<- done
+
+
+	val := k.IterativeFindValue("do", 3)
+	fmt.Println(val)
 	k.ServerDone <- true
 }

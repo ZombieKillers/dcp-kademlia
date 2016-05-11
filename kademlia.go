@@ -61,6 +61,15 @@ func (k *Kademlia) handleRemoteResponses() {
 		case request := <-k.server.FindNodeRequests:
 			k.updateRoutingTable(request.destination)
 			k.server.FindNodeReplies <- k.routes.FindClosest(request.target, BucketSize)
+		case request := <- k.server.FindValueRequests:
+			k.updateRoutingTable(request.destination)
+			if val, ok := k.HashTable[request.target]; ok {
+				fmt.Println(val)
+				// TODO send the value
+			} else {
+				// TODO send closest nodes
+			}
+			
 		case done := <-k.server.Done:
 			if done == true {
 				k.server.ServerHandle.Close()
@@ -77,15 +86,21 @@ func (k *Kademlia) handleRemoteResponses() {
 }
 
 func (k *Kademlia) storePair(pair *KeyValuePair) {
-	sha := sha1.New()
-	io.WriteString(sha, pair.Key)
-	hash := sha.Sum(nil)
+	hash := k.getHashForValue(pair.Key)
 	fmt.Printf("Hash: %x \n", hash)
 	_, err := NewNodeId(fmt.Sprintf("%x", hash))
 	if err != nil {
 		fmt.Println(err)
 	}
 	k.HashTable[string(hash)] = pair.Value
+}
+
+
+func (k *Kademlia) getHashForValue(value string) (hash []byte) {
+	sha := sha1.New()
+	io.WriteString(sha, value)
+	hash = sha.Sum(nil)
+	return
 }
 
 func (k *Kademlia) StopServer(){

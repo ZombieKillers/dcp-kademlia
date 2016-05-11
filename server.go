@@ -16,6 +16,8 @@ type KademliaServer struct {
 	PingContacts     chan Contact
 	FindNodeRequests chan FindNodeRequest
 	FindNodeReplies  chan []*ContactRecord
+	FindValueReplies chan []*FindValueReply
+	FindValueRequests chan FindValueRequest
 	PingReplies 	 chan Contact
 	Done             chan bool
 	KeyValuePairs    chan *KeyValuePair
@@ -69,7 +71,7 @@ func (ks *KademliaServer) HandleMessage(splitMessage []string, address *net.UDPA
 		err = ks.handleFindNode(splitMessage[1:], address)
 		break
 	case states[3]:
-		fmt.Println("I got a find value message!")
+		err = ks.handleFindValue(splitMessage[1:], address)
 		break
 	default:
 		err = errors.New("RPC not found!")
@@ -106,6 +108,8 @@ func (ks *KademliaServer) StartServer(self *Contact) error {
 	ks.FindNodeReplies = make(chan []*ContactRecord, 3)
 	ks.PingReplies = make(chan Contact, 1)
 	ks.KeyValuePairs = make(chan *KeyValuePair, 1)
+	ks.FindValueReplies = make(chan []*FindValueReply, 3)
+	ks.FindValueRequests = make(chan FindValueRequest, 1)
 
 	ServerAddr, e := net.ResolveUDPAddr("udp", ":"+strconv.Itoa(self.Port))
 	if e != nil {
